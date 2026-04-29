@@ -1,0 +1,61 @@
+# Practical: Generate HMAC for a message using two different keys and compare outputs.
+
+# Step 1: Create a message file
+echo "This is a secret message" > message.txt
+
+# Step 2: Create two different keys
+echo "KeyNumberOne" > key1.txt
+echo "KeyNumberTwo" > key2.txt
+
+# Step 3: View the message and keys
+echo "=== MESSAGE ==="
+cat message.txt
+echo ""
+echo "=== KEY 1 ==="
+cat key1.txt
+echo ""
+echo "=== KEY 2 ==="
+cat key2.txt
+echo ""
+
+# Step 4: Generate HMAC-MD5 with key1
+echo "=== HMAC-MD5 WITH KEY 1 ==="
+openssl dgst -md5 -hmac "$(cat key1.txt)" message.txt
+echo ""
+
+# Step 5: Generate HMAC-MD5 with key2
+echo "=== HMAC-MD5 WITH KEY 2 ==="
+openssl dgst -md5 -hmac "$(cat key2.txt)" message.txt
+echo ""
+
+# Step 6: Generate HMAC-SHA256 with key1
+echo "=== HMAC-SHA256 WITH KEY 1 ==="
+openssl dgst -sha256 -hmac "$(cat key1.txt)" message.txt
+echo ""
+
+# Step 7: Generate HMAC-SHA256 with key2
+echo "=== HMAC-SHA256 WITH KEY 2 ==="
+openssl dgst -sha256 -hmac "$(cat key2.txt)" message.txt
+echo ""
+
+# Step 8: Compare outputs visually
+echo "=== COMPARISON ==="
+echo "Same message + Different keys = Different HMACs"
+echo ""
+HMAC1=$(openssl dgst -md5 -hmac "$(cat key1.txt)" message.txt | cut -d ' ' -f2)
+HMAC2=$(openssl dgst -md5 -hmac "$(cat key2.txt)" message.txt | cut -d ' ' -f2)
+echo "HMAC-MD5 with Key1: $HMAC1"
+echo "HMAC-MD5 with Key2: $HMAC2"
+echo ""
+
+# Step 9: Check if HMACs are different
+echo "=== VERIFICATION ==="
+if [ "$HMAC1" = "$HMAC2" ]; then
+    echo "HMACs are IDENTICAL (unlikely)"
+else
+    echo "HMACs are DIFFERENT - Keys produce different authentication codes"
+fi
+echo ""
+
+# Cleanup
+# rm message.txt key1.txt key2.txt
