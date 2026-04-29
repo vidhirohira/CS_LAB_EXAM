@@ -1,0 +1,70 @@
+//Practical: Encrypt a file using AES and encrypt the AES key using RSA. Demonstrate full decryption pipeline.
+
+// ==================== PART 1: SETUP ====================
+
+// Create a confidential file to encrypt
+echo "This is top secret information. Only authorized personnel can access this data." > secret.txt
+
+// View original file
+echo "=== ORIGINAL FILE ==="
+cat secret.txt
+
+// Generate RSA key pair for key encryption
+openssl genrsa -out rsa_private.pem 2048 2>/dev/null
+openssl rsa -in rsa_private.pem -pubout -out rsa_public.pem 2>/dev/null
+
+// ==================== PART 2: ENCRYPTION PROCESS ====================
+
+// Step 1: Generate random AES key (32 bytes = 256 bits)
+openssl rand -hex 32 > aes_key.txt
+echo "=== AES-256 KEY (HEX) ==="
+cat aes_key.txt
+
+// Step 2: Generate random IV (Initialization Vector) for AES
+openssl rand -hex 16 > aes_iv.txt
+echo "=== AES IV (HEX) ==="
+cat aes_iv.txt
+
+// Step 3: Encrypt the file using AES-256-CBC with the generated key
+openssl enc -aes-256-cbc -e -in secret.txt -out secret_encrypted.bin \
+    -K $(cat aes_key.txt) -iv $(cat aes_iv.txt) 2>/dev/null
+
+// Step 4: Encrypt the AES key using RSA public key
+openssl pkeyutl -encrypt -pubin -inkey rsa_public.pem \
+    -in aes_key.txt -out aes_key_encrypted.bin 2>/dev/null
+
+// Step 5: View the encrypted files
+echo "=== ENCRYPTED AES KEY (Binary) ==="
+xxd aes_key_encrypted.bin | head -3
+
+echo "=== ENCRYPTED FILE CONTENT (First 32 bytes) ==="
+xxd secret_encrypted.bin | head -3
+
+// ==================== PART 3: DECRYPTION PROCESS ====================
+
+// Step 1: Decrypt the AES key using RSA private key
+openssl pkeyutl -decrypt -inkey rsa_private.pem \
+    -in aes_key_encrypted.bin -out aes_key_decrypted.txt 2>/dev/null
+
+// Step 2: Verify decrypted AES key matches original
+echo "=== ORIGINAL AES KEY ==="
+cat aes_key.txt
+echo "=== DECRYPTED AES KEY ==="
+cat aes_key_decrypted.txt
+
+// Step 3: Decrypt the file using recovered AES key and IV
+openssl enc -aes-256-cbc -d -in secret_encrypted.bin -out secret_decrypted.txt \
+    -K $(cat aes_key_decrypted.txt) -iv $(cat aes_iv.txt) 2>/dev/null
+
+// Step 4: View the final decrypted file
+echo "=== FINAL DECRYPTED FILE ==="
+cat secret_decrypted.txt
+
+// ==================== PART 4: VERIFICATION ====================
+
+// Compare original and decrypted files
+echo "=== VERIFICATION ==="
+diff secret.txt secret_decrypted.txt && echo "SUCCESS: Files match perfectly!" || echo "ERROR: Files differ"
+
+// Show file sizes
+ls -lh secret.txt secret_encrypted.bin aes_key_encrypted.bin
