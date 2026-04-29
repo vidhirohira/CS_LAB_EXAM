@@ -1,3 +1,5 @@
+//Practical: Encrypt a plaintext using AES-128 in ECB mode and identify repeating patterns (if any) in the ciphertext.
+
 // repeat chars
 printf "AAAAAAAAAAAAAAAA" > repeat1.txt
 printf "AAAAAAAAAAAAAAAA" >> repeat1.txt
