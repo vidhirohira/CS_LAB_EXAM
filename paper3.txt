@@ -1,0 +1,23 @@
+// Practical: Encrypt a plaintext using AES-CFB and introduce a single-bit error in ciphertext before decryption. Observe output.
+
+// Create plaintext
+printf "AAAAAAAAAAAAAAAA" > plain.txt
+
+// Encrypt with CFB mode
+openssl enc -aes-128-cfb -e -in plain.txt -out cipher.enc -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+// View original ciphertext
+xxd cipher.enc
+
+// Introduce single-bit error (flip first byte from 30 to 31)
+printf "\x31" | dd of=cipher.enc bs=1 seek=0 count=1 conv=notrunc 2>/dev/null
+
+// View corrupted ciphertext
+xxd cipher.enc
+
+// Decrypt corrupted ciphertext
+openssl enc -aes-128-cfb -d -in cipher.enc -out decrypted.txt -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+// View decrypted output (observe the error effect)
+xxd decrypted.txt
+cat decrypted.txt
