@@ -1,0 +1,20 @@
+// Practical: Encrypt the same input using DES-ECB and DES-CBC. Compare the ciphertext structurally.
+
+// Single block encryption
+printf "AAAAAAAA" > plain.txt
+openssl enc -des-ecb -e -in plain.txt -out des_ecb.enc -K 0011223344556677 -nosalt
+xxd des_ecb.enc
+openssl enc -des-cbc -e -in plain.txt -out des_cbc.enc -K 0011223344556677 -iv 1111111111111111
+xxd des_cbc.enc
+
+// Repeating pattern to show ECB weakness
+printf "AAAAAAAA" > block.txt
+cat block.txt block.txt > repeat_des.txt
+openssl enc -des-ecb -e -in repeat_des.txt -out des_ecb_repeat.enc -K 0011223344556677 -nosalt
+echo "=== DES-ECB with repeating pattern (look for identical blocks) ==="
+xxd des_ecb_repeat.enc
+openssl enc -des-cbc -e -in repeat_des.txt -out des_cbc_repeat.enc -K 0011223344556677 -iv 1111111111111111
+echo "=== DES-CBC with same repeating pattern (blocks will be different) ==="
+xxd des_cbc_repeat.enc
+
+// nahi chal raha in mac
