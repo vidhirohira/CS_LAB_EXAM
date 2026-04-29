@@ -1,0 +1,61 @@
+# Practical: Generate RSA keys and encrypt a message.
+
+# Step 1: Generate RSA private key (2048-bit)
+openssl genrsa -out private.pem 2048
+
+# Step 2: Extract public key from private key
+openssl rsa -in private.pem -pubout -out public.pem
+
+# Step 3: View the keys
+echo "=== PRIVATE KEY (first 5 lines) ==="
+head -5 private.pem
+echo "..."
+echo ""
+echo "=== PUBLIC KEY ==="
+cat public.pem
+echo ""
+
+# Step 4: Create a short message to encrypt
+echo "Confidential Message: RSA is secure" > message.txt
+
+# Step 5: Encrypt message using public key
+openssl pkeyutl -encrypt -in message.txt -out encrypted.bin -pubin -inkey public.pem
+
+# Step 6: Verify encryption created binary file
+echo "=== ENCRYPTION COMPLETE ==="
+ls -lh encrypted.bin
+echo ""
+
+# Step 7: Decrypt message using private key
+openssl pkeyutl -decrypt -in encrypted.bin -out decrypted.txt -inkey private.pem
+
+# Step 8: Compare original and decrypted
+echo "=== ORIGINAL MESSAGE ==="
+cat message.txt
+echo ""
+echo "=== DECRYPTED MESSAGE ==="
+cat decrypted.txt
+echo ""
+
+# Step 9: Verify they are identical
+echo "=== VERIFICATION ==="
+diff message.txt decrypted.txt
+if [ $? -eq 0 ]; then
+    echo "SUCCESS: Original and decrypted messages are IDENTICAL"
+else
+    echo "FAILURE: Messages do not match"
+fi
+echo ""
+
+# Step 10: Show encrypted data is binary (not readable)
+echo "=== ENCRYPTED DATA (first 32 bytes in hex) ==="
+xxd -l 32 encrypted.bin
+echo ""
+
+# Step 11: Demonstrate public key cannot decrypt
+echo "=== PUBLIC KEY CANNOT DECRYPT ==="
+openssl pkeyutl -decrypt -in encrypted.bin -out fail.txt -pubin -inkey public.pem 2>&1 | head -1
+echo ""
+
+# Cleanup
+# rm private.pem public.pem message.txt encrypted.bin decrypted.txt fail.txt
