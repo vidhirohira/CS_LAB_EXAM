@@ -1,0 +1,60 @@
+# Practical: Generate and verify a digital signature.
+
+# Step 1: Create a message file
+echo "This contract is signed by Alice" > message.txt
+
+# Step 2: Generate RSA private key
+openssl genrsa -out private.pem 2048
+
+# Step 3: Extract public key
+openssl rsa -in private.pem -pubout -out public.pem
+
+# Step 4: View the keys
+echo "=== PRIVATE KEY (first 3 lines) ==="
+head -3 private.pem
+echo "..."
+echo ""
+echo "=== PUBLIC KEY ==="
+cat public.pem
+echo ""
+
+# Step 5: View original message
+echo "=== ORIGINAL MESSAGE ==="
+cat message.txt
+echo ""
+
+# Step 6: Generate digital signature (sign with private key)
+openssl dgst -sha256 -sign private.pem -out signature.bin message.txt
+
+# Step 7: Verify signature with public key
+echo "=== VERIFICATION WITH ORIGINAL MESSAGE ==="
+openssl dgst -sha256 -verify public.pem -signature signature.bin message.txt
+echo ""
+
+# Step 8: Modify the message
+echo "This contract is signed by Bob" > message_modified.txt
+
+# Step 9: Try to verify original signature with modified message
+echo "=== VERIFICATION WITH MODIFIED MESSAGE ==="
+openssl dgst -sha256 -verify public.pem -signature signature.bin message_modified.txt
+echo ""
+
+# Step 10: Show the difference
+echo "=== MESSAGE DIFFERENCE ==="
+diff message.txt message_modified.txt
+echo ""
+
+# Step 11: Demonstrate signature is binary
+echo "=== SIGNATURE (first 32 bytes in hex) ==="
+xxd -l 32 signature.bin
+echo ""
+
+# Step 12: Show that only matching key pair works
+echo "=== WRONG PUBLIC KEY DEMONSTRATION ==="
+openssl genrsa -out wrong_private.pem 2048
+openssl rsa -in wrong_private.pem -pubout -out wrong_public.pem
+openssl dgst -sha256 -verify wrong_public.pem -signature signature.bin message.txt 2>&1 | head -1
+echo ""
+
+# Cleanup
+# rm message.txt message_modified.txt private.pem public.pem signature.bin wrong_private.pem wrong_public.pem
