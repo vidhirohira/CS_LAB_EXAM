@@ -1,0 +1,72 @@
+# Practical: Generate MD5 and SHA-256 hashes for two similar inputs and compare outputs
+
+# Create first input (16 bytes)
+printf "AAAAAAAAAAAAAAAA" > input1.txt
+
+# Create second input (only first byte different)
+printf "BAAAAAAAAAAAAAAA" > input2.txt
+
+# View both inputs
+echo "=== INPUT 1 ==="
+cat input1.txt
+echo ""
+echo "=== INPUT 2 ==="
+cat input2.txt
+echo ""
+
+# Display hex difference between inputs
+echo "=== HEX DIFFERENCE IN INPUTS ==="
+xxd input1.txt
+xxd input2.txt
+echo ""
+
+# Generate MD5 hashes
+echo "=== MD5 HASHES ==="
+md5 input1.txt
+md5 input2.txt
+echo ""
+
+# Generate SHA-256 hashes
+echo "=== SHA-256 HASHES ==="
+shasum -a 256 input1.txt
+shasum -a 256 input2.txt
+echo ""
+
+# Compare MD5 outputs directly
+echo "=== COMPARING MD5 HASHES ==="
+MD5_1=$(md5 -q input1.txt)
+MD5_2=$(md5 -q input2.txt)
+
+if [ "$MD5_1" = "$MD5_2" ]; then
+    echo "MD5 hashes are IDENTICAL (unlikely)"
+else
+    echo "MD5 hashes are DIFFERENT"
+    echo "Input1 MD5: $MD5_1"
+    echo "Input2 MD5: $MD5_2"
+fi
+echo ""
+
+# Compare SHA-256 outputs directly
+echo "=== COMPARING SHA-256 HASHES ==="
+SHA_1=$(shasum -a 256 input1.txt | cut -d ' ' -f1)
+SHA_2=$(shasum -a 256 input2.txt | cut -d ' ' -f1)
+
+if [ "$SHA_1" = "$SHA_2" ]; then
+    echo "SHA-256 hashes are IDENTICAL (unlikely)"
+else
+    echo "SHA-256 hashes are DIFFERENT"
+    echo "Input1 SHA-256: $SHA_1"
+    echo "Input2 SHA-256: $SHA_2"
+fi
+echo ""
+
+# Show detailed difference in hash outputs
+echo "=== VERBOSE DIFF OF HASHES ==="
+echo "--- MD5 Diff ---"
+diff <(echo $MD5_1 | fold -w2) <(echo $MD5_2 | fold -w2) || true
+echo ""
+echo "--- SHA-256 Diff ---"
+diff <(echo $SHA_1 | fold -w2) <(echo $SHA_2 | fold -w2) || true
+
+# Cleanup (optional)
+# rm input1.txt input2.txt
