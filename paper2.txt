@@ -1,0 +1,14 @@
+// Practical: Encrypt the same plaintext twice using AES-CBC with different IVs and compare the outputs.
+
+// CBC with IV 1
+printf "AAAAAAAAAAAAAAAA" > plain.txt
+openssl enc -aes-128-cbc -e -in plain.txt -out cbc1.enc -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+xxd cbc1.enc
+
+// CBC with IV 2 (different IV)
+openssl enc -aes-128-cbc -e -in plain.txt -out cbc2.enc -K 00112233445566778899aabbccddeeff -iv 22222222222222222222222222222222
+xxd cbc2.enc
+
+// Compare with ECB (no IV)
+openssl enc -aes-128-ecb -e -in plain.txt -out ecb.enc -K 00112233445566778899aabbccddeeff -nopad
+xxd ecb.enc
