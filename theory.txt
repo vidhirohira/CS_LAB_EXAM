@@ -1,0 +1,362 @@
+================================================================================
+                              CRYPTOGRAPHY THEORY ANSWERS
+                                   (Papers 1 - 20)
+================================================================================
+
+PAPER 1
+Theory: Explain why ECB mode leaks structural information and under what type of
+data this weakness becomes visible.
+
+Answer:
+ECB (Electronic Codebook) mode encrypts each identical plaintext block into an
+identical ciphertext block using the same key. This leaks structural information
+because repeating patterns in the plaintext remain visible as repeating patterns
+in the ciphertext. The weakness becomes clearly visible with highly structured
+or repetitive data, such as images (e.g., a BMP logo with solid background),
+database column headers, or formatted documents. An attacker can identify
+relationships between blocks without decrypting.
+
+--------------------------------------------------------------------------------
+
+PAPER 2
+Theory: Justify how IV randomness contributes to semantic security in block
+ciphers.
+
+Answer:
+Semantic security means that an attacker cannot distinguish ciphertexts of two
+plaintexts, even if they choose the plaintexts. A random, unpredictable IV
+(Initialization Vector) ensures that encrypting the same plaintext twice
+produces different ciphertexts, breaking any deterministic relationship. For CBC
+mode, a random IV ensures that the first ciphertext block is unique, which
+randomizes all subsequent blocks. Without a random IV, identical plaintexts
+yield identical ciphertexts, violating semantic security.
+
+--------------------------------------------------------------------------------
+
+PAPER 3
+Theory: Explain the error propagation behavior in CFB mode and its impact on
+reliability.
+
+Answer:
+In CFB (Cipher Feedback) mode, a single-bit error in the ciphertext affects:
+- The corresponding decrypted plaintext block (bits in same position are flipped).
+- All subsequent plaintext blocks until the corrupted ciphertext block shifts out
+  of the shift register (typically 1 block in CFB-128 or 8/16 bits in CFB-8/CFB-16).
+
+Impact on reliability: CFB is self-synchronizing — after a limited number of
+blocks, decryption recovers correctly. This makes it suitable for streaming
+applications where burst errors can be tolerated, but not for integrity-sensitive
+data without extra authentication.
+
+--------------------------------------------------------------------------------
+
+PAPER 4
+Theory: Explain why OFB mode limits error propagation and where it is preferred.
+
+Answer:
+OFB (Output Feedback) mode generates a keystream independently of plaintext and
+ciphertext. A single-bit error in ciphertext affects only the corresponding bit
+of the decrypted plaintext; it does not affect any other bits or subsequent
+blocks. This is because the keystream generation uses only the IV and key
+(feedback does not include ciphertext).
+
+Preferred in: Satellite communications, fiber optic links, and any noisy channel
+where burst errors are common but you want to avoid error spreading, and where
+synchronization loss can be managed.
+
+--------------------------------------------------------------------------------
+
+PAPER 5
+Theory: Explain why CBC hides patterns better than ECB using block dependency
+reasoning.
+
+Answer:
+CBC (Cipher Block Chaining) XORs each plaintext block with the previous
+ciphertext block before encryption. This creates dependency: changing one
+plaintext block changes that ciphertext block and all following ciphertext
+blocks. As a result, identical plaintext blocks produce different ciphertext
+blocks unless the preceding ciphertext blocks are also identical (practically
+impossible with random IV). ECB treats each block independently, so identical
+plaintext → identical ciphertext, revealing patterns. CBC breaks this equality,
+hiding structural patterns.
+
+--------------------------------------------------------------------------------
+
+PAPER 6
+Theory: Explain the role of key pairs in RSA and why incorrect key usage fails
+mathematically.
+
+Answer:
+RSA uses a public key (e, n) for encryption and a private key (d, n) for
+decryption, where n = p × q, e × d ≡ 1 mod φ(n). Encryption: c = m^e mod n.
+Decryption: m = c^d mod n. Mathematically, (m^e)^d ≡ m^(e×d) ≡ m^(k×φ(n)+1) ≡ m
+mod n (Euler's theorem). If you use the wrong key (e.g., encrypt with private key
+or decrypt with public key), the modular exponentiation does not invert unless
+the keys are paired correctly, producing garbage output. Only the matching key
+pair satisfies the multiplicative inverse property.
+
+--------------------------------------------------------------------------------
+
+PAPER 7
+Theory: Explain how hybrid encryption balances performance and security in
+real-world systems.
+
+Answer:
+Symmetric encryption (AES) is fast but has key distribution problem. Asymmetric
+encryption (RSA) solves key distribution but is slow for large data. Hybrid
+encryption:
+1. Generate a random session key (symmetric).
+2. Encrypt the data with AES using the session key (fast).
+3. Encrypt only the session key with RSA public key (small).
+4. Send both ciphertext + encrypted session key.
+
+This balances: performance of symmetric crypto for bulk data + security and
+convenience of asymmetric for key exchange. Used in TLS, PGP, S/MIME.
+
+--------------------------------------------------------------------------------
+
+PAPER 8
+Theory: Explain avalanche effect quantitatively (in terms of bit changes).
+
+Answer:
+Avalanche effect: a small change in input (e.g., flipping one bit) causes each
+output bit to change with probability ~0.5. Quantitatively, for a well-designed
+cipher:
+- Changing 1 bit of plaintext should flip each ciphertext bit with 50% probability.
+- Average Hamming distance between two ciphertexts (from plaintexts differing by
+  1 bit) should be ≈ half the block size.
+- For AES-128 (128-bit block), an average of ≈64 bits should differ.
+- Measured = (number of differing bits) / (block size) × 100% → ideally 50%.
+
+--------------------------------------------------------------------------------
+
+PAPER 9
+Theory: Explain why modern systems prefer SHA-256 over MD5.
+
+Answer:
+- Collision resistance: MD5 is broken — practical collisions can be found in
+  seconds (e.g., two different files with same MD5). SHA-256 has no known
+  practical collisions.
+- Pre-image resistance: MD5 weakened but not fully broken, still weaker than
+  SHA-256.
+- Length: MD5 = 128 bits, SHA-256 = 256 bits → larger space against brute force.
+- Security margin: MD5 vulnerabilities exploited in rogue CA certificates and
+  malware masquerading. NIST deprecated MD5 since 2012.
+
+--------------------------------------------------------------------------------
+
+PAPER 10
+Theory: Explain the concept of pre-image resistance and its importance.
+
+Answer:
+Pre-image resistance: given a hash value h, it is computationally infeasible to
+find any message m such that hash(m) = h. Also called one-way property.
+
+Importance:
+- Password storage: Attacker with hash cannot recover password.
+- Commitment schemes: You can commit to a value by publishing its hash without
+  revealing the value.
+- Digital signatures: Without pre-image resistance, attacker could forge signature
+  by finding a different message with same hash.
+
+Modern cryptographic hashes (SHA-256) are designed to be pre-image resistant
+(~2^256 operations).
+
+--------------------------------------------------------------------------------
+
+PAPER 11
+Theory: Explain why strong collision resistance is computationally difficult to
+break.
+
+Answer:
+Collision resistance: finding any two distinct inputs x ≠ y with hash(x) = hash(y).
+For a good n-bit hash, birthday attack reduces strength from 2^n to about 2^(n/2).
+For SHA-256 (n=256), that's ~2^128 operations — still infeasible. Computational
+difficulty comes from:
+- No known mathematical shortcut for well-designed hashes.
+- Best generic attack is birthday paradox (requires huge storage/time).
+- Attempts take billions of years with current hardware.
+- Broken hashes like MD5 show that exploiting internal structure reduces
+  difficulty, but for SHA-256 no such reduction exists publicly.
+
+--------------------------------------------------------------------------------
+
+PAPER 12
+Theory: Explain how HMAC prevents tampering compared to plain hashing.
+
+Answer:
+Plain hash: hash(message) — anyone can recompute hash if they know the message.
+Attacker can modify message and recompute new valid hash → no tamper protection.
+
+HMAC: hash(key ⊕ opad || hash(key ⊕ ipad || message)).
+- Requires a secret key unknown to attacker.
+- Without key, attacker cannot generate valid HMAC for tampered message.
+- Provides integrity + authentication: receiver with same key recomputes HMAC;
+  mismatch means tampering.
+
+HMAC also resists length extension attacks that affect plain SHA-256.
+
+--------------------------------------------------------------------------------
+
+PAPER 13
+Theory: Explain how digital signatures ensure integrity and non-repudiation.
+
+Answer:
+- Integrity: Any change to the signed message changes the hash, making signature
+  verification fail.
+- Non-repudiation: The signer's private key is unique to them. If verification
+  succeeds with the signer's public key, only someone with that private key could
+  have produced it. The signer cannot later deny signing (assuming key is properly
+  protected).
+
+Process: signer hashes message, encrypts hash with private key (RSA) or uses
+ECDSA. Verifier decrypts with public key and compares to recomputed hash.
+
+--------------------------------------------------------------------------------
+
+PAPER 14
+Theory: Explain why frequency distribution makes monoalphabetic cipher insecure.
+
+Answer:
+In monoalphabetic substitution, each plaintext letter maps to a fixed ciphertext
+letter. Letter frequencies in natural language (E, T, A, O in English ~12.7%,
+9.1%, 8.2%, 7.5%) remain preserved in ciphertext. An attacker can:
+1. Count ciphertext letter frequencies.
+2. Match most frequent ciphertext letter to 'E', second to 'T', etc.
+3. Guess short common words ('the', 'and').
+4. Decrypt fully with minimal computation.
+
+Even with shuffling, patterns of digraphs/trigraphs (TH, HE, IN) leak structure.
+Computers break these in milliseconds.
+
+--------------------------------------------------------------------------------
+
+PAPER 15
+Theory: Explain how key length affects security in Vigenere cipher.
+
+Answer:
+Key length (L) determines periodicity. For L=1, it's a Caesar cipher (trivial).
+For L>1, the cipher repeats every L characters. Longer key:
+- Increases number of possible keys (26^L) → brute force harder.
+- Raises the period → frequency analysis of monoalphabetic within each position
+  becomes harder because each position requires separate frequency count, and
+  longer key means fewer samples per position for short messages.
+
+However, Kasiski examination and index of coincidence can still determine L if
+message is sufficiently long relative to L. Max security when L ≈ message length
+(running key), but that becomes one-time pad only if key is truly random and
+never reused.
+
+--------------------------------------------------------------------------------
+
+PAPER 16
+Theory: Compare symmetric and asymmetric cryptography in terms of key management
+and computational cost.
+
+Answer:
++-------------------+------------------------+---------------------------+
+| Aspect            | Symmetric (AES)        | Asymmetric (RSA)          |
++-------------------+------------------------+---------------------------+
+| Key management    | Shared secret — secure | Public keys distributed   |
+|                   | distribution problem   | openly; private keys kept |
+|                   |                        | secret                    |
+| Number of keys    | For n parties:         | For n parties: 2n keys    |
+|                   | ~n(n-1)/2 keys         | (one public, one private  |
+|                   |                        | each)                     |
+| Computational cost| Very fast (hardware    | Slow (modular             |
+|                   | accelerated)           | exponentiation)           |
+| Scalability       | Poor for large groups  | Excellent                 |
+| Primary use       | Bulk encryption        | Key exchange, digital     |
+|                   |                        | signatures, small data    |
++-------------------+------------------------+---------------------------+
+
+Hybrid systems combine both.
+
+--------------------------------------------------------------------------------
+
+PAPER 17
+Theory: Explain how encryption and decryption processes differ in symmetric vs
+asymmetric systems.
+
+Answer:
++-------------------+------------------------+---------------------------+
+|                   | Symmetric (AES)        | Asymmetric (RSA)          |
++-------------------+------------------------+---------------------------+
+| Encryption key    | Same as decryption key | Public key                |
+| Decryption key    | Same as encryption key | Private key (different)   |
+| Operation         | Same algorithm with    | Inverse mathematical      |
+|                   | same key               | operation (e*d = 1 mod φ) |
+| Process           | Block cipher + mode    | Modular exponentiation    |
+|                   | (XOR, substitution,    |                           |
+|                   | permutation)           |                           |
+| Speed             | Fast                   | Slow                      |
+| Key size          | 128–256 bits           | 2048–4096 bits for        |
+|                   |                        | equivalent security       |
++-------------------+------------------------+---------------------------+
+
+In symmetric: encrypt(plain, key) → cipher; decrypt(cipher, same key) → plain.
+In asymmetric: encrypt(plain, pub) → cipher; decrypt(cipher, priv) → plain.
+
+--------------------------------------------------------------------------------
+
+PAPER 18
+Theory: Explain how packet sniffing can compromise confidentiality and how
+encryption mitigates it.
+
+Answer:
+Packet sniffing captures unencrypted network traffic (HTTP, FTP, DNS, email).
+Attacker sees: login credentials, session cookies, private messages, files.
+Without encryption, confidentiality is zero.
+
+Mitigation via encryption:
+- At link layer: MACsec, WPA2/3.
+- At network layer: IPsec (encrypts IP packets).
+- At transport layer: TLS (HTTPS, secure email, FTPS).
+- At application layer: PGP, SSH.
+
+Encryption ensures that even if sniffed, payloads appear as random bytes. Only
+intended recipient with key can decrypt.
+
+--------------------------------------------------------------------------------
+
+PAPER 19
+Theory: Explain how data is encapsulated across layers in TCP/IP during
+transmission.
+
+Answer:
+Encapsulation (example: HTTPS over AES-CBC):
+1. Application layer: HTTP plaintext.
+2. Transport layer (TLS): Plaintext encrypted with AES-CBC, becomes TLS record.
+3. Transport layer (TCP): TLS record becomes TCP segment payload (add TCP header).
+4. Network layer (IP): TCP segment becomes IP packet payload (add IP header).
+5. Link layer (Ethernet): IP packet becomes Ethernet frame payload (add Ethernet
+   header + FCS).
+
+At receiver, each layer strips its header and passes data up. Encryption at
+layer 4 (TLS) means link/network layers see only ciphertext.
+
+--------------------------------------------------------------------------------
+
+PAPER 20
+Theory: Explain how ARP poisoning leads to man-in-the-middle attacks.
+
+Answer:
+ARP poisoning: attacker sends forged ARP replies, associating attacker's MAC
+address with someone else's IP address (e.g., default gateway).
+
+Steps:
+1. Victim A wants to send to Gateway G.
+2. Attacker M says "I am G" (spoofed ARP).
+3. A sends traffic intended for G to M.
+4. M forwards to real G (after reading/modifying) — now M is in the middle.
+5. Same for traffic from G to A.
+
+Result: attacker sees/modifies all traffic between A and G → can strip TLS
+warnings, sniff passwords, inject malicious data.
+
+Mitigation: static ARP entries, ARP spoofing detection, switch security features
+(DHCP snooping, DAI).
+
+================================================================================
+                               END OF DOCUMENT
+================================================================================
