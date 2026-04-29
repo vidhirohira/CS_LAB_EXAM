@@ -1,0 +1,56 @@
+// Practical: Encrypt two nearly identical plaintexts using AES and compare ciphertext differences.
+
+// Create first plaintext (16 bytes)
+printf "AAAAAAAAAAAAAAAA" > plain1.txt
+
+// Create second plaintext (only first byte different)
+printf "BAAAAAAAAAAAAAAA" > plain2.txt
+
+// View both plaintexts
+echo "=== PLAINTEXT 1 ==="
+cat plain1.txt
+echo ""
+echo "=== PLAINTEXT 2 ==="
+cat plain2.txt
+echo ""
+
+// Display hex difference between plaintexts
+echo "=== HEX DIFFERENCE IN PLAINTEXTS ==="
+xxd plain1.txt
+xxd plain2.txt
+
+// Encrypt plaintext1 with AES-128-CBC
+openssl enc -aes-128-cbc -e -in plain1.txt -out cipher1.enc \
+    -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+// Encrypt plaintext2 with SAME key and IV
+openssl enc -aes-128-cbc -e -in plain2.txt -out cipher2.enc \
+    -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+// View both ciphertexts
+echo "=== CIPHERTEXT 1 (First plaintext) ==="
+xxd cipher1.enc
+
+echo "=== CIPHERTEXT 2 (Second plaintext) ==="
+xxd cipher2.enc
+
+// Compare ciphertexts
+echo "=== COMPARING CIPHERTEXTS ==="
+cmp -l cipher1.enc cipher2.enc
+
+// Show ciphertext difference in hex
+echo "=== CIPHERTEXT DIFFERENCES ==="
+diff <(xxd cipher1.enc) <(xxd cipher2.enc)
+
+// Decrypt both ciphertexts to verify
+openssl enc -aes-128-cbc -d -in cipher1.enc -out decrypt1.txt \
+    -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+openssl enc -aes-128-cbc -d -in cipher2.enc -out decrypt2.txt \
+    -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+echo "=== DECRYPTED PLAINTEXT 1 ==="
+cat decrypt1.txt
+
+echo "=== DECRYPTED PLAINTEXT 2 ==="
+cat decrypt2.txt
