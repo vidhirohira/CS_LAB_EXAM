@@ -1,0 +1,23 @@
+// Practical: Encrypt data using AES-OFB and manually alter one byte of ciphertext. Decrypt and analyze the effect.
+
+// Create plaintext
+printf "AAAAAAAAAAAAAAAA" > plain.txt
+
+// Encrypt with OFB mode
+openssl enc -aes-128-ofb -e -in plain.txt -out cipher.enc -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+// View original ciphertext
+xxd cipher.enc
+
+// Introduce single-bit error (flip first byte from ee to 31)
+printf "\x31" | dd of=cipher.enc bs=1 seek=0 count=1 conv=notrunc 2>/dev/null
+
+// View corrupted ciphertext
+xxd cipher.enc
+
+// Decrypt corrupted ciphertext
+openssl enc -aes-128-ofb -d -in cipher.enc -out decrypted.txt -K 00112233445566778899aabbccddeeff -iv 11111111111111111111111111111111
+
+// View decrypted output
+xxd decrypted.txt
+cat decrypted.txt
