@@ -1,0 +1,50 @@
+# Practical: Generate hashes for multiple unrelated inputs and check for collisions.
+
+# Step 1: Create input files
+echo "Hello World" > input1.txt
+echo "The quick brown fox" > input2.txt
+echo "1234567890" > input3.txt
+echo "Password@123" > input4.txt
+echo "Blockchain Technology" > input5.txt
+
+# Step 2: Generate MD5 hashes
+echo "=== MD5 HASHES ==="
+md5 input*.txt
+echo ""
+
+# Step 3: Generate SHA-256 hashes
+echo "=== SHA-256 HASHES ==="
+shasum -a 256 input*.txt
+echo ""
+
+# Step 4: Check MD5 for collisions
+echo "=== MD5 COLLISION CHECK ==="
+MD5_COUNT=$(md5 -q input*.txt | sort | uniq -d | wc -l)
+if [ $MD5_COUNT -gt 0 ]; then
+    echo "[COLLISION FOUND] Two different inputs produced same MD5 hash"
+else
+    echo "[NO COLLISIONS] All MD5 hashes are unique"
+fi
+echo ""
+
+# Step 5: Check SHA-256 for collisions
+echo "=== SHA-256 COLLISION CHECK ==="
+SHA_COUNT=$(shasum -a 256 input*.txt | cut -d ' ' -f1 | sort | uniq -d | wc -l)
+if [ $SHA_COUNT -gt 0 ]; then
+    echo "[COLLISION FOUND] Two different inputs produced same SHA-256 hash"
+else
+    echo "[NO COLLISIONS] All SHA-256 hashes are unique"
+fi
+echo ""
+
+# Step 6: Show why collisions are rare
+echo "=== WHY NO COLLISIONS ==="
+echo "All 5 inputs produced DIFFERENT hashes for both MD5 and SHA-256"
+echo ""
+echo "MD5 space: 2^128 possible hashes (340 undecillion possibilities)"
+echo "SHA-256 space: 2^256 possible hashes (even larger)"
+echo "With only 5 inputs, probability of collision is extremely low"
+echo ""
+
+# Cleanup
+# rm input*.txt
