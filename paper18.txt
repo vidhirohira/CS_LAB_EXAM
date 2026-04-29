@@ -1,0 +1,50 @@
+# Practical: Generate SHA-256 hash for a file and verify integrity after modification.
+
+# Step 1: Create original file
+echo "This is an important document that needs integrity checking" > document.txt
+
+# Step 2: Generate SHA-256 hash of original file
+shasum -a 256 document.txt > hash.txt
+
+# Step 3: View original file and its hash
+echo "=== ORIGINAL FILE ==="
+cat document.txt
+echo ""
+echo "=== SHA-256 HASH ==="
+cat hash.txt
+echo ""
+
+# Step 4: Verify integrity (before modification)
+echo "=== VERIFICATION BEFORE MODIFICATION ==="
+shasum -a 256 -c hash.txt
+echo ""
+
+# Step 5: Modify the file (add a single character)
+echo "This is an important document that needs integrity checking!" > document.txt
+
+# Step 6: View modified file
+echo "=== MODIFIED FILE ==="
+cat document.txt
+echo ""
+
+# Step 7: Verify integrity again (should fail)
+echo "=== VERIFICATION AFTER MODIFICATION ==="
+shasum -a 256 -c hash.txt 2>&1
+echo ""
+
+# Step 8: Show the hash difference
+echo "=== HASH COMPARISON ==="
+echo "Original hash: $(cat hash.txt | cut -d ' ' -f1)"
+echo "New hash:      $(shasum -a 256 document.txt | cut -d ' ' -f1)"
+echo ""
+
+# Step 9: Demonstrate same file produces same hash
+echo "=== DETERMINISTIC PROPERTY ==="
+echo "Restoring original content..."
+echo "This is an important document that needs integrity checking" > document.txt
+echo "Verifying again:"
+shasum -a 256 -c hash.txt
+echo ""
+
+# Cleanup
+# rm document.txt hash.txt
