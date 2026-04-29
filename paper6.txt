@@ -1,0 +1,45 @@
+//Practical: Generate RSA keys and encrypt a short message. Attempt decryption using incorrect key and observe behavior.
+
+
+// Step 1: Generate Alice's RSA key pair (2048-bit)
+openssl genrsa -out alice_private.pem 2048
+
+// Extract Alice's public key from private key
+openssl rsa -in alice_private.pem -pubout -out alice_public.pem
+
+// Step 2: Generate Bob's RSA key pair (different/wrong key)
+openssl genrsa -out bob_private.pem 2048
+
+// Extract Bob's public key from private key
+openssl rsa -in bob_private.pem -pubout -out bob_public.pem
+
+// Step 3: Create short plaintext message
+echo "Hello RSA Security" > message.txt
+
+// View original plaintext
+cat message.txt
+
+// Step 4: Encrypt message using Alice's PUBLIC key
+openssl pkeyutl -encrypt -pubin -inkey alice_public.pem -in message.txt -out ciphertext.bin
+
+// View encrypted ciphertext (raw binary)
+xxd ciphertext.bin | head -5
+
+// Step 5: Decrypt using CORRECT private key (Alice's key)
+openssl pkeyutl -decrypt -inkey alice_private.pem -in ciphertext.bin -out decrypted_correct.txt
+
+// View correctly decrypted message
+cat decrypted_correct.txt
+
+// Step 6: Decrypt using INCORRECT private key (Bob's key) - ATTEMPT WRONG DECRYPTION
+openssl pkeyutl -decrypt -inkey bob_private.pem -in ciphertext.bin -out decrypted_wrong.txt
+
+// View the garbage output from wrong key decryption
+xxd decrypted_wrong.txt
+cat decrypted_wrong.txt
+
+// Step 7: Compare sizes and content of both decryptions
+ls -la decrypted_correct.txt decrypted_wrong.txt
+
+// Step 8: Verify that wrong key produces garbage (binary comparison)
+cmp -l decrypted_correct.txt decrypted_wrong.txt 2>/dev/null || echo "Files are DIFFERENT - Wrong key produced garbage!"
