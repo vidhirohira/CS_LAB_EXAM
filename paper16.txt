@@ -1,0 +1,65 @@
+# Practical: Encrypt a message using AES-CBC and verify correctness after decryption.
+
+# Step 1: Create plaintext message
+echo "This is a secret message for AES encryption" > plaintext.txt
+
+# Step 2: Generate random key and IV
+openssl rand -hex 32 > key.txt
+openssl rand -hex 16 > iv.txt
+
+# Step 3: View key and IV (in hex format)
+echo "=== KEY (32 bytes = 256 bits) ==="
+cat key.txt
+echo ""
+echo "=== IV (16 bytes = 128 bits) ==="
+cat iv.txt
+echo ""
+
+# Step 4: Encrypt using AES-256-CBC
+openssl enc -aes-256-cbc -e -in plaintext.txt -out ciphertext.bin \
+    -K $(cat key.txt) -iv $(cat iv.txt)
+
+# Step 5: Verify encryption created file
+echo "=== ENCRYPTION COMPLETE ==="
+ls -lh ciphertext.bin
+echo ""
+
+# Step 6: Decrypt back to original
+openssl enc -aes-256-cbc -d -in ciphertext.bin -out decrypted.txt \
+    -K $(cat key.txt) -iv $(cat iv.txt)
+
+# Step 7: Compare original and decrypted
+echo "=== ORIGINAL PLAINTEXT ==="
+cat plaintext.txt
+echo ""
+echo "=== DECRYPTED TEXT ==="
+cat decrypted.txt
+echo ""
+
+# Step 8: Verify they are identical
+echo "=== VERIFICATION ==="
+diff plaintext.txt decrypted.txt
+if [ $? -eq 0 ]; then
+    echo "SUCCESS: Original and decrypted files are IDENTICAL"
+else
+    echo "FAILURE: Files do not match"
+fi
+echo ""
+
+# Step 9: Show ciphertext is binary (not readable)
+echo "=== CIPHERTEXT (first 32 bytes in hex) ==="
+xxd -l 32 ciphertext.bin
+echo ""
+
+# Step 10: Demonstrate wrong key would fail
+echo "=== WRONG KEY DEMONSTRATION ==="
+openssl rand -hex 32 > wrong_key.txt
+openssl enc -aes-256-cbc -d -in ciphertext.bin -out wrong_decrypt.txt \
+    -K $(cat wrong_key.txt) -iv $(cat iv.txt) 2>/dev/null
+echo "Decryption with wrong key produces garbage:"
+head -c 50 wrong_decrypt.txt
+echo ""
+echo ""
+
+# Cleanup
+# rm plaintext.txt key.txt iv.txt ciphertext.bin decrypted.txt wrong_key.txt wrong_decrypt.txt
