@@ -1,0 +1,4 @@
+echo "AAAAAAAAAAAAAAAA" > a.txt
+cat a.txt a.txt > repeat.txt
+openssl enc -aes-128-ecb -e -in repeat.txt -out out.enc -K 00112233445566778899aabbccddeeff -nosalt
+xxd out.enc
