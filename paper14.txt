@@ -1,0 +1,51 @@
+# Practical: Encrypt a text using monoalphabetic substitution and attempt partial decryption using frequency observation.
+
+# Step 1: Create original plaintext
+echo "the quick brown fox jumps over the lazy dog" > plaintext.txt
+
+# Step 2: Create a simple monoalphabetic substitution cipher (shift by 1)
+# a->b, b->c, ..., z->a
+tr 'a-z' 'b-za' < plaintext.txt > ciphertext.txt
+
+# Step 3: View original and encrypted text
+echo "=== ORIGINAL TEXT ==="
+cat plaintext.txt
+echo ""
+echo "=== ENCRYPTED TEXT (Shift Cipher) ==="
+cat ciphertext.txt
+echo ""
+
+# Step 4: Show character mapping
+echo "=== SUBSTITUTION MAPPING (first 5 letters) ==="
+echo "a->b, b->c, c->d, d->e, e->f"
+echo ""
+
+# Step 5: Perform frequency analysis on ciphertext
+echo "=== FREQUENCY ANALYSIS OF CIPHERTEXT ==="
+cat ciphertext.txt | grep -o '[a-z]' | sort | uniq -c | sort -rn
+echo ""
+
+# Step 6: Most frequent letters in English (e, t, a, o, i, n)
+echo "=== MOST FREQUENT LETTERS IN ENGLISH ==="
+echo "e (12.7%), t (9.1%), a (8.2%), o (7.5%), i (7.0%), n (6.7%)"
+echo ""
+
+# Step 7: Guess substitutions based on frequency
+# In our ciphertext, most frequent letter is likely 'u' (which is shifted 't')
+echo "=== PARTIAL DECRYPTION GUESS ==="
+echo "Most frequent in ciphertext:"
+cat ciphertext.txt | grep -o '[a-z]' | sort | uniq -c | sort -rn | head -3
+echo ""
+echo "Guessing: Most frequent ciphertext letter = 'e' in plaintext"
+echo "Also: Second most frequent = 't' in plaintext"
+echo ""
+
+# Step 8: Attempt partial decryption (just first few letters)
+echo "=== PARTIAL DECRYPTION EXAMPLE ==="
+echo "Ciphertext first 10 chars: $(head -c 10 ciphertext.txt)"
+echo "If we guess 'u' = 'e' and 'j' = 't':"
+head -c 10 ciphertext.txt | tr 'uj' 'et'
+echo ""
+
+# Cleanup
+# rm plaintext.txt ciphertext.txt
