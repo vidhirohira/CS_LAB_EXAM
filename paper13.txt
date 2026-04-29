@@ -1,0 +1,34 @@
+# Practical: Sign a message digitally and verify it. Then modify the message and re-verify.
+
+# Step 1: Create a message file
+echo "This is an important document" > message.txt
+
+# Step 2: Generate a private key
+openssl genrsa -out private.pem 2048
+
+# Step 3: Extract public key from private key
+openssl rsa -in private.pem -pubout -out public.pem
+
+# Step 4: Sign the message using private key
+openssl dgst -sha256 -sign private.pem -out signature.bin message.txt
+
+# Step 5: Verify the signature using public key
+echo "=== VERIFICATION WITH ORIGINAL MESSAGE ==="
+openssl dgst -sha256 -verify public.pem -signature signature.bin message.txt
+echo ""
+
+# Step 6: Create a modified version of the message
+echo "This is an important document with changes" > message_modified.txt
+
+# Step 7: Try to verify original signature with modified message
+echo "=== VERIFICATION WITH MODIFIED MESSAGE ==="
+openssl dgst -sha256 -verify public.pem -signature signature.bin message_modified.txt
+echo ""
+
+# Step 8: View the difference between messages
+echo "=== MESSAGE DIFFERENCE ==="
+diff message.txt message_modified.txt
+echo ""
+
+# Cleanup
+# rm message.txt message_modified.txt private.pem public.pem signature.bin
