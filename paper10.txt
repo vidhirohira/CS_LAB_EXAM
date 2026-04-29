@@ -1,0 +1,53 @@
+# Practical: Modify a single character in a file and regenerate its hash. Analyze the difference.
+
+# Step 1: Create original file with text
+echo "The quick brown fox jumps over the lazy dog" > original.txt
+
+# Step 2: Create modified file (change just ONE character)
+# Change 'q' to 'Q' in "quick"
+sed 's/quick/Quick/' original.txt > modified.txt
+
+# Step 3: View both files
+echo "=== ORIGINAL FILE ==="
+cat original.txt
+echo ""
+echo "=== MODIFIED FILE ==="
+cat modified.txt
+echo ""
+
+# Step 4: Show hex difference (byte-level)
+echo "=== HEX DUMP ORIGINAL ==="
+xxd original.txt
+echo ""
+echo "=== HEX DUMP MODIFIED ==="
+xxd modified.txt
+echo ""
+
+# Step 5: See exactly which byte changed
+echo "=== BYTE-LEVEL DIFFERENCE ==="
+cmp -l original.txt modified.txt
+echo ""
+
+# Step 6: Generate MD5 hashes
+echo "=== MD5 HASHES ==="
+md5 original.txt
+md5 modified.txt
+echo ""
+
+# Step 7: Generate SHA-256 hashes
+echo "=== SHA-256 HASHES ==="
+shasum -a 256 original.txt
+shasum -a 256 modified.txt
+echo ""
+
+# Step 8: Visual comparison of hashes
+echo "=== VISUAL HASH COMPARISON ==="
+echo "Original MD5:      $(md5 -q original.txt)"
+echo "Modified MD5:      $(md5 -q modified.txt)"
+echo ""
+echo "Original SHA-256:  $(shasum -a 256 original.txt | cut -d ' ' -f1)"
+echo "Modified SHA-256:  $(shasum -a 256 modified.txt | cut -d ' ' -f1)"
+echo ""
+
+# Cleanup (uncomment to remove files)
+# rm original.txt modified.txt
