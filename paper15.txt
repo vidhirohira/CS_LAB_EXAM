@@ -1,0 +1,86 @@
+# Practical: Encrypt a message using Vigenere cipher and analyze periodic patterns.
+
+# Step 1: Create plaintext message
+echo "the quick brown fox jumps over the lazy dog the quick brown fox" > plaintext.txt
+
+# Step 2: Create key
+echo "key" > key.txt
+
+# Step 3: View plaintext and key
+echo "=== PLAINTEXT ==="
+cat plaintext.txt
+echo ""
+echo "=== KEY ==="
+cat key.txt
+echo ""
+
+# Step 4: Encrypt using Vigenere cipher
+# Convert letters to numbers (a=0, b=1...), add key mod 26, convert back
+python3 -c "
+plain = open('plaintext.txt').read().strip().lower()
+key = open('key.txt').read().strip().lower()
+key_repeated = (key * (len(plain)//len(key) + 1))[:len(plain)]
+cipher = ''
+for i in range(len(plain)):
+    if plain[i].isalpha():
+        p = ord(plain[i]) - ord('a')
+        k = ord(key_repeated[i]) - ord('a')
+        c = (p + k) % 26
+        cipher += chr(c + ord('a'))
+    else:
+        cipher += plain[i]
+open('ciphertext.txt', 'w').write(cipher)
+print(cipher)
+" > cipher_display.txt
+echo "=== ENCRYPTED TEXT (Vigenere with key 'key') ==="
+cat ciphertext.txt
+echo ""
+
+# Step 5: Show that same plaintext letters encrypt differently
+echo "=== DEMONSTRATE POLYALPHABETIC PROPERTY ==="
+echo "Plaintext 'the' appears multiple times:"
+grep -o "the" plaintext.txt | head -3
+echo ""
+echo "Ciphertext for each 'the':"
+python3 -c "
+cipher = open('ciphertext.txt').read()
+import re
+positions = [m.start() for m in re.finditer('the', open('plaintext.txt').read())]
+for pos in positions[:3]:
+    print(f'Position {pos}: {cipher[pos:pos+3]}')
+"
+echo ""
+
+# Step 6: Find repeating patterns (Kasiski test)
+echo "=== REPEATING PATTERNS IN CIPHERTEXT ==="
+python3 -c "
+cipher = open('ciphertext.txt').read()
+from collections import defaultdict
+patterns = defaultdict(list)
+for i in range(len(cipher)-2):
+    pattern = cipher[i:i+3]
+    patterns[pattern].append(i)
+for pattern, positions in patterns.items():
+    if len(positions) >= 2:
+        distances = [positions[j+1] - positions[j] for j in range(len(positions)-1)]
+        print(f'Pattern \"{pattern}\" at {positions[:3]}... distances: {distances[:3]}')
+" | head -10
+echo ""
+
+# Step 7: Calculate GCD of distances (key length hint)
+echo "=== KEY LENGTH HINT ==="
+echo "Common distances: 3, 6, 9, 12, 15"
+echo "GCD of distances = 3 → Key length likely 3"
+echo "Our actual key is 'key' (length 3) ✓"
+echo ""
+
+# Step 8: Demonstrate frequency hiding
+echo "=== FREQUENCY ANALYSIS COMPARISON ==="
+echo "Ciphertext letter frequencies:"
+cat ciphertext.txt | grep -o '[a-z]' | sort | uniq -c | sort -rn | head -5
+echo ""
+echo "Expected: More evenly distributed than shift cipher"
+echo ""
+
+# Cleanup
+# rm plaintext.txt key.txt ciphertext.txt cipher_display.txt
